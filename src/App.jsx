@@ -6,7 +6,7 @@ import LawyerDocumentUpload from './components/lawyer/LawyerDocumentUpload'
 import LawyerSummaryView from './components/lawyer/LawyerSummaryView'
 import Layout from './components/Layout'
 import Navbar from './components/Navbar'
-import ThemeToggle from './components/ThemeToggle'
+// import ThemeToggle from './components/ThemeToggle'
 import { usePortal } from './context/PortalContext'
 import './index.css'
 
@@ -20,8 +20,7 @@ function App() {
   return (
     <Layout>
       <Navbar />
-      <ThemeToggle />
-      
+            
       <div className="app-container">
         <div className="header-section">
           <h1 className="main-title">

@@ -120,7 +120,6 @@ const LawyerSummaryView = ({ originalText, summary, keySections }) => {
           </div>
         </div>
         <div className="summary-actions no-print">
-          <SimpleAudioPlayer size="small" />
           <button
             onClick={handlePrint}
             className="print-btn"

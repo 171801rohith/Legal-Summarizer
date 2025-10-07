@@ -1,24 +1,42 @@
+// src/components/lawyer/LawyerDocumentUpload.jsx
 import React, { useCallback, useState } from 'react'
-import { Upload, FileText, Loader, AlertCircle, Scale, BookOpen, Users } from 'lucide-react'
+import { Upload, FileText, Loader, AlertCircle, Scale, BookOpen, Users, Volume2, Languages, ChevronDown } from 'lucide-react'
 import { generateSummary } from '../../services/summarization'
 import { parsePDF, parseDOCX, loadSampleDocument } from '../../utils/fileParser'
 import { getLegalTemplate } from '../../utils/legalTemplates'
+import './LawyerDocumentUpload.css'
 
-const LawyerDocumentUpload = ({ 
-  onDocumentProcessed, 
-  onSummaryGenerated, 
-  onKeySectionsFound, 
-  isLoading, 
-  setIsLoading 
+const LawyerDocumentUpload = ({
+  onDocumentProcessed,
+  onSummaryGenerated,
+  onKeySectionsFound,
+  isLoading,
+  setIsLoading
 }) => {
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState('')
   const [documentType, setDocumentType] = useState('general')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [selectedLanguage, setSelectedLanguage] = useState('English (US)')
+
+  const languages = [
+    'English (US)',
+    'English (India)', 
+    'Hindi',
+    'Tamil',
+    'Telugu',
+    'Malayalam'
+  ]
+
+  const handleLanguageSelect = (language) => {
+    setSelectedLanguage(language)
+    setIsDropdownOpen(false)
+  }
 
   const handleFile = async (file) => {
     if (!file) return
 
-    if (file.size > 25 * 1024 * 1024) { // 25MB for lawyers
+    if (file.size > 25 * 1024 * 1024) {
       setError('File size too large. Please upload files smaller than 25MB.')
       return
     }
@@ -56,7 +74,6 @@ const LawyerDocumentUpload = ({
 
       onDocumentProcessed(text)
       
-      // Generate professional legal summary
       const result = await generateSummary(text)
       onSummaryGenerated(result.summary)
       onKeySectionsFound(result.keySections)
@@ -69,7 +86,34 @@ const LawyerDocumentUpload = ({
     }
   }
 
-  // ... (keep the same drag/drop handlers from previous DocumentUpload)
+  const handleDrag = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }, [])
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    setError('')
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0])
+    }
+  }, [])
+
+  const handleChange = (e) => {
+    e.preventDefault()
+    setError('')
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0])
+    }
+  }
 
   const handlePasteText = async () => {
     const textarea = document.getElementById('lawyer-text-input')
@@ -127,30 +171,75 @@ const LawyerDocumentUpload = ({
   }
 
   return (
-    <div className="component-card professional-upload">
+    <div className="professional-component-card">
+      {/* Professional Header with Audio Controls */}
       <div className="professional-header">
         <Scale className="professional-icon" />
-        <div>
+        <div className="header-content">
           <h2 className="professional-title">Legal Professional Document Analysis</h2>
           <p className="professional-subtitle">Advanced legal document processing with professional-grade analysis</p>
         </div>
+        
+        {/* Audio and Language Controls */}
+        <div className="audio-controls">
+          <div className="audio-player professional">
+            <button 
+              className="audio-btn professional"
+              title="Listen to analysis (Feature coming soon)"
+            >
+              <Volume2 size={18} />
+            </button>
+            
+            <div className="language-dropdown professional">
+              <button 
+                className="language-btn professional"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                title="Select language"
+              >
+                <Languages size={16} />
+                <ChevronDown size={12} />
+              </button>
+              
+              {isDropdownOpen && (
+                <div className="language-menu professional">
+                  <div className="language-menu-content">
+                    <p className="language-menu-title">Select Language</p>
+                    {languages.map((language) => (
+                      <button
+                        key={language}
+                        className={`language-option ${selectedLanguage === language ? 'selected' : ''}`}
+                        onClick={() => handleLanguageSelect(language)}
+                      >
+                        {language}
+                        {selectedLanguage === language && <span className="checkmark">✓</span>}
+                      </button>
+                    ))}
+                    <div className="language-note">
+                      Professional TTS coming soon
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-      
+
       {error && (
-        <div className="error-state professional-error">
-          <AlertCircle className="error-icon" />
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="professional-error-state">
+          <AlertCircle className="professional-error-icon" />
+          <p className="professional-error-text">{error}</p>
         </div>
       )}
-      
-      <div className="space-y-4">
+
+      <div className="professional-space-y-6">
         {/* Document Type Selector */}
-        <div className="form-group">
-          <label className="form-label">Document Type</label>
+        <div className="document-type-section">
+          <label className="document-type-label">Document Type</label>
           <select 
             value={documentType}
             onChange={(e) => setDocumentType(e.target.value)}
-            className="form-input"
+            className="document-type-select"
           >
             <option value="general">General Legal Document</option>
             <option value="judgment">Court Judgment</option>
@@ -161,146 +250,153 @@ const LawyerDocumentUpload = ({
           </select>
         </div>
 
-        {/* Drag & Drop Area */}
-        <div className={`upload-area professional-upload-area ${dragActive ? 'drag-active' : ''} ${error ? 'has-error' : ''}`}>
-          <Upload className="upload-icon" />
-          <div className="mt-4">
-            <p className="text-lg font-medium text-gray-900">
-              Drop legal document here
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Court judgments, contracts, statutes, pleadings (PDF, DOC, DOCX, TXT) - Up to 25MB
-            </p>
+        {/* Professional Upload Area */}
+        <div
+          className={`professional-upload-area ${dragActive ? 'drag-active' : ''} ${error ? 'has-error' : ''}`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
+          <Upload className="professional-upload-icon" />
+          <div className="upload-text">
+            <p className="upload-main-text">Drop legal document here</p>
+            <p className="upload-subtext">Court judgments, contracts, statutes, pleadings (PDF, DOC, DOCX, TXT) - Up to 25MB</p>
           </div>
           <input
             type="file"
             id="lawyer-file-upload"
-            className="hidden"
+            className="professional-file-input"
             accept=".pdf,.doc,.docx,.txt"
-            onChange={(e) => {
-              setError('')
-              if (e.target.files && e.target.files[0]) {
-                handleFile(e.target.files[0])
-              }
-            }}
+            onChange={handleChange}
             disabled={isLoading}
           />
           <label
             htmlFor="lawyer-file-upload"
-            className="btn btn-primary mt-4"
-            style={{display: 'inline-flex', opacity: isLoading ? 0.6 : 1}}
+            className={`professional-file-label ${isLoading ? 'disabled' : ''}`}
           >
+            <Upload className="label-icon" />
             Choose Legal Document
           </label>
         </div>
 
-        <div className="text-center">
-          <p className="text-sm text-gray-500">or</p>
+        <div className="professional-divider">
+          <span>or</span>
         </div>
 
-        {/* Text Input */}
-        <div className="form-group">
-          <label htmlFor="lawyer-text-input" className="form-label">
+        {/* Professional Text Input */}
+        <div className="professional-text-input-section">
+          <label htmlFor="lawyer-text-input" className="professional-text-input-label">
             Paste Legal Document Content
           </label>
           <textarea
             id="lawyer-text-input"
-            className="form-input textarea professional-textarea"
+            className="professional-text-input"
             placeholder="Paste complete legal document text for professional analysis..."
             onChange={() => setError('')}
             rows="8"
           />
-          <button
-            onClick={handlePasteText}
-            disabled={isLoading}
-            className="btn btn-primary w-full mt-3 professional-analyze-btn"
-          >
-            {isLoading ? (
-              <>
-                <Loader className="loading-spinner" />
-                Analyzing Legal Document...
-              </>
-            ) : (
-              <>
-                <Scale size={16} />
-                Analyze Document
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Professional Templates */}
-        <div className="border-t pt-4">
-          <p className="text-sm text-gray-600 mb-3 flex items-center">
-            <BookOpen size={16} className="mr-2" />
-            Legal Document Templates:
-          </p>
-          <div className="grid grid-cols-1 gap-2">
+          
+          {/* Professional Buttons */}
+          <div className="professional-button-container">
             <button
-              onClick={() => handleTemplate('bailApplication')}
-              className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 py-3 px-3 rounded transition-colors text-left professional-template-btn"
+              onClick={handlePasteText}
+              disabled={isLoading}
+              className="professional-action-button analyze-button"
             >
-              <strong>Bail Application</strong>
-              <br />
-              <span className="text-xs opacity-75">Section 439 CrPC format</span>
+              {isLoading ? (
+                <>
+                  <Loader className="professional-loading-spinner" />
+                  Analyzing Document...
+                </>
+              ) : (
+                <>
+                  <Scale size={16} />
+                  Analyze Document
+                </>
+              )}
             </button>
+            
             <button
-              onClick={() => handleTemplate('divorcePetition')}
-              className="text-xs bg-purple-100 hover:bg-purple-200 text-purple-800 py-3 px-3 rounded transition-colors text-left professional-template-btn"
+              onClick={handlePasteText}
+              disabled={isLoading}
+              className="professional-action-button professional-advise-button"
             >
-              <strong>Divorce Petition</strong>
-              <br />
-              <span className="text-xs opacity-75">Hindu Marriage Act, Section 13</span>
-            </button>
-            <button
-              onClick={() => handleTemplate('consumerComplaint')}
-              className="text-xs bg-green-100 hover:bg-green-200 text-green-800 py-3 px-3 rounded transition-colors text-left professional-template-btn"
-            >
-              <strong>Consumer Complaint</strong>
-              <br />
-              <span className="text-xs opacity-75">Consumer Protection Act, 2019</span>
+              <BookOpen size={16} />
+              Generate Advise
             </button>
           </div>
         </div>
 
-        {/* Sample Documents */}
-        <div className="border-t pt-4">
-          <p className="text-sm text-gray-600 mb-3 flex items-center">
-            <Users size={16} className="mr-2" />
-            Sample Legal Documents:
+        {/* Professional Templates Section */}
+        <div className="professional-section">
+          <p className="section-title">
+            <BookOpen className="section-icon" />
+            Legal Document Templates
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="professional-template-grid">
+            <button
+              onClick={() => handleTemplate('bailApplication')}
+              className="professional-template-button bail-template"
+            >
+              <span className="template-strong">Bail Application</span>
+              <span className="template-subtext">Section 439 CrPC format</span>
+            </button>
+            <button
+              onClick={() => handleTemplate('divorcePetition')}
+              className="professional-template-button divorce-template"
+            >
+              <span className="template-strong">Divorce Petition</span>
+              <span className="template-subtext">Hindu Marriage Act, Section 13</span>
+            </button>
+            <button
+              onClick={() => handleTemplate('consumerComplaint')}
+              className="professional-template-button consumer-template"
+            >
+              <span className="template-strong">Consumer Complaint</span>
+              <span className="template-subtext">Consumer Protection Act, 2019</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Professional Sample Documents */}
+        <div className="professional-section">
+          <p className="section-title">
+            <Users className="section-icon" />
+            Sample Legal Documents
+          </p>
+          <div className="professional-sample-grid">
             <button
               onClick={() => handleSampleDocument('short')}
-              className="sample-btn professional-sample-btn"
+              className="professional-sample-button"
             >
               Brief Judgment
             </button>
             <button
               onClick={() => handleSampleDocument('medium')}
-              className="sample-btn professional-sample-btn"
+              className="professional-sample-button"
             >
               Standard Case
             </button>
             <button
               onClick={() => handleSampleDocument('long')}
-              className="sample-btn professional-sample-btn"
+              className="professional-sample-button"
             >
               Complex Matter
             </button>
           </div>
         </div>
-      </div>
 
-      {isLoading && (
-        <div className="loading-state professional-loading">
-          <Loader className="loading-spinner" />
-          <div>
-            <p className="text-sm font-medium text-blue-800">Processing Legal Document</p>
-            <p className="text-xs text-blue-600">Performing comprehensive legal analysis...</p>
+        {isLoading && (
+          <div className="professional-loading-state">
+            <Loader className="professional-loading-spinner" />
+            <div>
+              <p className="professional-loading-text">Processing Legal Document</p>
+              <p className="professional-loading-subtext">Performing comprehensive legal analysis...</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

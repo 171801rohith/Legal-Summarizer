@@ -1,0 +1,141 @@
+/* Navbar Right Section */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.theme-toggle-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.dark .theme-toggle-btn {
+  border-color: #4b5563;
+  color: #9ca3af;
+}
+
+.dark .theme-toggle-btn:hover {
+  background: #374151;
+  border-color: #6b7280;
+  color: #f9fafb;
+}
+
+.theme-icon {
+  transition: transform 0.2s ease;
+}
+
+.theme-toggle-btn:hover .theme-icon {
+  transform: rotate(15deg);
+}
+
+.theme-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Update existing navbar styles for better spacing */
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Portal Switcher adjustments */
+.portal-switcher {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  border-radius: 12px;
+  padding: 0.25rem;
+  border: 1px solid #e5e7eb;
+  margin: 0 auto;
+}
+
+/* Portal Badge adjustments */
+.portal-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .navbar-container {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  
+  .portal-switcher {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .navbar-right {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .portal-switcher {
+    order: 2;
+    width: 100%;
+  }
+  
+  .navbar-right {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .theme-text {
+    display: none;
+  }
+  
+  .theme-toggle-btn {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .portal-btn span {
+    display: none;
+  }
+  
+  .portal-btn {
+    padding: 0.5rem;
+  }
+  
+  .portal-divider {
+    display: none;
+  }
+}

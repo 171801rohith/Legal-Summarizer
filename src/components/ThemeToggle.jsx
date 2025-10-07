@@ -1,23 +1,45 @@
-import React from 'react'
-import { Moon, Sun } from 'lucide-react'
-import { useTheme } from '../context/ThemeContext'
+// src/context/ThemeContext.jsx
+import React, { createContext, useContext, useState, useEffect } from 'react'
 
-const ThemeToggle = () => {
-  const { isDark, toggleTheme } = useTheme()
+const ThemeContext = createContext()
 
-  return (
-    <button
-      onClick={toggleTheme}
-      className="fixed top-4 right-4 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-50"
-      aria-label="Toggle theme"
-    >
-      {isDark ? (
-        <Sun className="w-5 h-5 text-yellow-500" />
-      ) : (
-        <Moon className="w-5 h-5 text-gray-700" />
-      )}
-    </button>
-  )
+export const useTheme = () => {
+  const context = useContext(ThemeContext)
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
+  return context
 }
 
-export default ThemeToggle
+export const ThemeProvider = ({ children }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    // Check system preference or saved theme
+    const savedTheme = localStorage.getItem('theme')
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    
+    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+      setIsDark(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    // Apply theme to document
+    if (isDark) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [isDark])
+
+  const toggleTheme = () => setIsDark(!isDark)
+
+  return (
+    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  )
+}

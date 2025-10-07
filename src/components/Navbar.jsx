@@ -1,19 +1,21 @@
+// src/components/Navbar.jsx
 import React from 'react'
-import { Scale, User, Briefcase } from 'lucide-react'
+import { Scale, User, Briefcase, Moon, Sun } from 'lucide-react'
 import { usePortal } from '../context/PortalContext'
 import { useTheme } from '../context/ThemeContext'
+import './Navbar.css'
 
 const Navbar = () => {
   const { currentPortal, switchPortal } = usePortal()
-  const { isDark } = useTheme()
+  const { isDark, toggleTheme } = useTheme()
 
   return (
-    <nav className={`navbar ${isDark ? 'navbar-dark' : 'navbar-light'}`}>
+    <nav className="navbar">
       <div className="navbar-container">
         {/* Logo */}
         <div className="navbar-brand">
           <Scale className="navbar-logo" />
-          <span className="navbar-title">Pravah</span>
+          <span className="navbar-title">Praavah</span>
         </div>
 
         {/* Portal Switcher */}
@@ -37,9 +39,28 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Portal Badge */}
-        <div className={`portal-badge ${currentPortal === 'lawyer' ? 'portal-badge-lawyer' : 'portal-badge-citizen'}`}>
-          {currentPortal === 'lawyer' ? '⚖️ Legal Mode' : '👥 Citizen Mode'}
+        {/* Right Side - Theme Toggle and Portal Badge */}
+        <div className="navbar-right">
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="theme-toggle-btn"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? (
+              <Sun size={20} className="theme-icon" />
+            ) : (
+              <Moon size={20} className="theme-icon" />
+            )}
+            <span className="theme-text">
+              {isDark ? 'Light Mode' : 'Dark Mode'}
+            </span>
+          </button>
+
+          {/* Portal Badge */}
+          <div className={`portal-badge ${currentPortal === 'lawyer' ? 'portal-badge-lawyer' : 'portal-badge-citizen'}`}>
+            {currentPortal === 'lawyer' ? '⚖️ Legal Mode' : '👥 Citizen Mode'}
+          </div>
         </div>
       </div>
     </nav>

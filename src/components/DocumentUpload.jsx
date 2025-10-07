@@ -1,19 +1,36 @@
 // src/components/DocumentUpload.jsx
 import React, { useCallback, useState } from 'react'
-import { Upload, FileText, Loader, AlertCircle } from 'lucide-react'
+import { Upload, FileText, Loader, AlertCircle, Scale, Volume2, Languages, ChevronDown } from 'lucide-react'
 import { generateSummary } from '../services/summarization'
 import { parsePDF, parseDOCX, loadSampleDocument } from '../utils/fileParser'
 import { getLegalTemplate } from '../utils/legalTemplates'
+import './DocumentUpload.css'
 
-const DocumentUpload = ({ 
-  onDocumentProcessed, 
-  onSummaryGenerated, 
-  onKeySectionsFound, 
-  isLoading, 
-  setIsLoading 
+const DocumentUpload = ({
+  onDocumentProcessed,
+  onSummaryGenerated,
+  onKeySectionsFound,
+  isLoading,
+  setIsLoading
 }) => {
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState('')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [selectedLanguage, setSelectedLanguage] = useState('English (US)')
+
+  const languages = [
+    'English (US)',
+    'English (India)', 
+    'Hindi',
+    'Tamil',
+    'Telugu',
+    'Malayalam'
+  ]
+
+  const handleLanguageSelect = (language) => {
+    setSelectedLanguage(language)
+    setIsDropdownOpen(false)
+  }
 
   const handleFile = async (file) => {
     if (!file) return
@@ -30,7 +47,7 @@ const DocumentUpload = ({
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'text/plain'
     ]
-    
+
     if (!validTypes.includes(file.type)) {
       setError('Unsupported file type. Please upload PDF, DOCX, or TXT files.')
       return
@@ -38,10 +55,10 @@ const DocumentUpload = ({
 
     setIsLoading(true)
     setError('')
-    
+
     try {
       let text = ''
-      
+
       if (file.type === 'application/pdf') {
         text = await parsePDF(file)
       } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
@@ -55,12 +72,12 @@ const DocumentUpload = ({
       }
 
       onDocumentProcessed(text)
-      
+
       // Generate summary and key sections
       const result = await generateSummary(text)
       onSummaryGenerated(result.summary)
       onKeySectionsFound(result.keySections)
-      
+
     } catch (error) {
       console.error('Error processing document:', error)
       setError(error.message || 'Error processing document. Please try again.')
@@ -84,7 +101,7 @@ const DocumentUpload = ({
     e.stopPropagation()
     setDragActive(false)
     setError('')
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFile(e.dataTransfer.files[0])
     }
@@ -101,7 +118,7 @@ const DocumentUpload = ({
   const handlePasteText = async () => {
     const textarea = document.getElementById('text-input')
     const text = textarea.value.trim()
-    
+
     if (!text) {
       setError('Please paste some text content first.')
       return
@@ -114,7 +131,7 @@ const DocumentUpload = ({
 
     setIsLoading(true)
     setError('')
-    
+
     try {
       onDocumentProcessed(text)
       const result = await generateSummary(text)
@@ -131,11 +148,11 @@ const DocumentUpload = ({
     const sampleText = loadSampleDocument(type)
     const textarea = document.getElementById('text-input')
     textarea.value = sampleText
-    
+
     // Auto-generate summary for sample documents
     setIsLoading(true)
     setError('')
-    
+
     try {
       onDocumentProcessed(sampleText)
       const result = await generateSummary(sampleText)
@@ -148,156 +165,219 @@ const DocumentUpload = ({
     }
   }
 
-  // In the return statement of DocumentUpload.jsx, use this structure:
-return (
-  <div className="component-card">
-    <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-      <FileText className="mr-2" />
-      Upload Legal Document
-    </h2>
-    
-    {error && (
-      <div className="error-state">
-        <AlertCircle className="error-icon" />
-        <p className="text-red-700 text-sm">{error}</p>
-      </div>
-    )}
-    
-    <div className="space-y-4">
-      {/* Drag and drop area */}
-      <div className={`upload-area ${dragActive ? 'drag-active' : ''} ${error ? 'has-error' : ''}`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}>
-        <Upload className="upload-icon" />
-        <div className="mt-4">
-          <p className="text-lg font-medium text-gray-900">
-            Drop your legal document here
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Indian court judgments, legal acts (PDF,DOCX,Image)
-          </p>
+  const handleTemplate = (templateType) => {
+    const template = getLegalTemplate(templateType)
+    const textarea = document.getElementById('text-input')
+    textarea.value = template
+  }
+
+  return (
+    <div className="component-card">
+      {/* Header with Audio Controls */}
+      <div className="upload-header">
+        <div className="header-left">
+          <FileText className="header-icon" />
+          <div>
+            <h2 className="upload-title">Upload Legal Document</h2>
+            <p className="upload-subtitle">Get AI-powered summaries of your legal documents</p>
+          </div>
         </div>
-        <input
-          type="file"
-          id="file-upload"
-          className="hidden"
-          accept=".pdf,.docx,.txt"
-          onChange={handleChange}
-          disabled={isLoading}
-        />
-        <label
-          htmlFor="file-upload"
-          className="btn btn-primary mt-4"
-          style={{display: 'inline-flex', opacity: isLoading ? 0.6 : 1}}
-        >
-          Choose File
-        </label>
+        
+        {/* Audio and Language Controls */}
+        <div className="audio-controls">
+          <div className="audio-player">
+            {/* Audio Button */}
+            <button 
+              className="audio-btn"
+              title="Listen to summary (Feature coming soon)"
+            >
+              <Volume2 size={20} />
+            </button>
+            
+            {/* Language Dropdown */}
+            <div className="language-dropdown">
+              <button 
+                className="language-btn"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                title="Select language"
+              >
+                <Languages size={18} />
+                <ChevronDown size={14} />
+              </button>
+              
+              {isDropdownOpen && (
+                <div className="language-menu">
+                  <div className="language-menu-content">
+                    <p className="language-menu-title">Select Language</p>
+                    {languages.map((language) => (
+                      <button
+                        key={language}
+                        className={`language-option ${selectedLanguage === language ? 'selected' : ''}`}
+                        onClick={() => handleLanguageSelect(language)}
+                      >
+                        {language}
+                        {selectedLanguage === language && <span className="checkmark">✓</span>}
+                      </button>
+                    ))}
+                    <div className="language-note">
+                      Text-to-speech coming soon
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Text input area */}
-      <div className="form-group">
-        <label htmlFor="text-input" className="form-label">
-          Paste Legal Text Content
-        </label>
-        <textarea
-          id="text-input"
-          className="form-input textarea"
-          placeholder="Paste Indian court judgment or legal document text here..."
-          onChange={() => setError('')}
-          rows="6"
-        />
-        <button
-          onClick={handlePasteText}
-          disabled={isLoading}
-          className="btn btn-primary w-full mt-3"
-        >
-          {isLoading ? (
-            <>
-              <Loader className="loading-spinner" />
-              Generating Summary...
-            </>
-          ) : (
-            'Generate Summary'
-          )}
-        </button>
-        <button
-          onClick={handlePasteText}
-          disabled={isLoading}
-          className="btn btn-primary w-full mt-3"
-        >
-          {isLoading ? (
-            <>
-              <Loader className="loading-spinner" />
-              Generating Advise...
-            </>
-          ) : (
-            'Generate Advise'
-          )}
-        </button>
-      </div>
-
-      {/* Sample documents */}
-      <div className="border-t pt-4">
-        <p className="text-sm text-gray-600 mb-3">Try with sample document:</p>
-        <div className="sample-buttons">
-          <button className="sample-btn" onClick={() => handleSampleDocument('short')}>
-            Short Sample
-          </button>
-          <button className="sample-btn" onClick={() => handleSampleDocument('medium')}>
-            Medium Sample
-          </button>
-          <button className="sample-btn" onClick={() => handleSampleDocument('long')}>
-            Long Sample
-          </button>
+      {error && (
+        <div className="error-state">
+          <AlertCircle className="error-icon" />
+          <p className="error-text">{error}</p>
         </div>
+      )}
+
+      <div className="upload-content">
+        {/* Drag and drop area */}
+        <div
+          className={`upload-area ${dragActive ? 'drag-active' : ''} ${error ? 'has-error' : ''}`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
+          <Upload className="upload-icon" />
+          <div className="upload-text">
+            <p className="upload-main-text">Drop your legal document here</p>
+            <p className="upload-subtext">Indian court judgments, legal acts (PDF, DOCX, TXT)</p>
+          </div>
+          <input
+            type="file"
+            id="file-upload"
+            className="file-input"
+            accept=".pdf,.docx,.txt"
+            onChange={handleChange}
+            disabled={isLoading}
+          />
+          <label
+            htmlFor="file-upload"
+            className={`file-label ${isLoading ? 'disabled' : ''}`}
+          >
+            <Upload className="label-icon" />
+            Choose File
+          </label>
+        </div>
+
+        <div className="divider">
+          <span>or</span>
+        </div>
+
+        {/* Text Input Section */}
+        <div className="text-input-section">
+          <label htmlFor="text-input" className="text-input-label">
+            Paste Legal Text Content
+          </label>
+          <textarea
+            id="text-input"
+            className="text-input"
+            placeholder="Paste Indian court judgment or legal document text here..."
+            onChange={() => setError('')}
+            rows="6"
+          />
+          
+          {/* Buttons */}
+          <div className="button-container">
+            <button
+              onClick={handlePasteText}
+              disabled={isLoading}
+              className="action-button summary-button"
+            >
+              {isLoading ? (
+                <>
+                  <Loader className="loading-spinner" />
+                  Generating Summary...
+                </>
+              ) : (
+                <>
+                  <FileText className="button-icon" />
+                  Generate Summary
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={handlePasteText}
+              disabled={isLoading}
+              className="action-button advise-button"
+            >
+              <Scale className="button-icon" />
+              Generate Advise
+            </button>
+          </div>
+        </div>
+
+        {/* Sample Documents Section */}
+        <div className="section-border">
+          <p className="section-header">Try with sample document:</p>
+          <div className="sample-buttons-grid">
+            <button
+              onClick={() => handleSampleDocument('short')}
+              className="sample-button"
+            >
+              Short Sample
+            </button>
+            <button
+              onClick={() => handleSampleDocument('medium')}
+              className="sample-button"
+            >
+              Medium Sample
+            </button>
+            <button
+              onClick={() => handleSampleDocument('long')}
+              className="sample-button"
+            >
+              Long Sample
+            </button>
+          </div>
+        </div>
+
+        {/* Templates Section */}
+        <div className="section-border">
+          <p className="section-header">Quick legal templates:</p>
+          <div className="template-buttons-grid">
+            <button
+              onClick={() => handleTemplate('bailApplication')}
+              className="template-button bail-template"
+            >
+              📝 Bail Application Template
+            </button>
+            <button
+              onClick={() => handleTemplate('divorcePetition')}
+              className="template-button divorce-template"
+            >
+              💔 Divorce Petition Template
+            </button>
+            <button
+              onClick={() => handleTemplate('consumerComplaint')}
+              className="template-button consumer-template"
+            >
+              ⚖️ Consumer Complaint Template
+            </button>
+          </div>
+        </div>
+
+        {isLoading && (
+          <div className="loading-state">
+            <Loader className="loading-spinner" />
+            <div>
+              <p className="loading-text">Processing Document</p>
+              <p className="loading-subtext">Analyzing legal content and generating summary...</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
-    <div className="border-t pt-4">
-  <p className="text-sm text-gray-600 mb-3">Quick legal templates:</p>
-  <div className="grid grid-cols-1 gap-2">
-    <button
-      onClick={() => {
-        const template = getLegalTemplate('bailApplication')
-        document.getElementById('text-input').value = template
-      }}
-      className="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 px-3 rounded transition-colors text-left"
-    >
-      📝 Bail Application Template
-    </button>
-    <button
-      onClick={() => {
-        const template = getLegalTemplate('divorcePetition')
-        document.getElementById('text-input').value = template
-      }}
-      className="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 px-3 rounded transition-colors text-left"
-    >
-      💔 Divorce Petition Template
-    </button>
-    <button
-      onClick={() => {
-        const template = getLegalTemplate('consumerComplaint')
-        document.getElementById('text-input').value = template
-      }}
-      className="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 px-3 rounded transition-colors text-left"
-    >
-      ⚖️ Consumer Complaint Template
-    </button>
-  </div>
-</div>
-
-    {isLoading && (
-      <div className="loading-state">
-        <Loader className="loading-spinner" />
-        <div>
-          <p className="text-sm font-medium text-blue-800">Processing Document</p>
-          <p className="text-xs text-blue-600">Analyzing legal content and generating summary...</p>
-        </div>
-      </div>
-    )}
-  </div>
-)
+  )
 }
 
 export default DocumentUpload

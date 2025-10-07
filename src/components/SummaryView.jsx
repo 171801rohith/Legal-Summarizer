@@ -99,7 +99,6 @@ const SummaryView = ({ originalText, summary }) => {
       <div className="summary-header">
         <h2 className="summary-title">Document Summary</h2>
         <div className="summary-actions no-print">
-          <SimpleAudioPlayer />
           <button
             onClick={handlePrint}
             className="print-btn"
