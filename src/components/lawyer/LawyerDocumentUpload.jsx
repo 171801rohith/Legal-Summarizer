@@ -18,6 +18,8 @@ const LawyerDocumentUpload = ({
   const [documentType, setDocumentType] = useState('general')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState('English (US)')
+  const [documentText, setDocumentText] = useState('')
+  const [fileName, setFileName] = useState('')
 
   const languages = [
     'English (US)',
@@ -27,6 +29,16 @@ const LawyerDocumentUpload = ({
     'Telugu',
     'Malayalam'
   ]
+
+  // Map language for backend
+  const languageMap = {
+    'English (US)': 'eng',
+    'English (India)': 'eng',
+    'Hindi': 'hin',
+    'Tamil': 'tam',
+    'Telugu': 'tel',
+    'Malayalam': 'mal'
+  }
 
   const handleLanguageSelect = (language) => {
     setSelectedLanguage(language)
@@ -58,25 +70,30 @@ const LawyerDocumentUpload = ({
     
     try {
       let text = ''
-      
       if (file.type === 'application/pdf') {
         text = await parsePDF(file)
-      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-                 file.type === 'application/msword') {
+      } else if (
+        file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        file.type === 'application/msword'
+      ) {
         text = await parseDOCX(file)
       } else if (file.type === 'text/plain') {
         text = await file.text()
       }
 
       if (!text || text.trim().length < 50) {
-        throw new Error('Document appears to be empty or too short for analysis.')
+        throw new Error('Document appears too short for analysis.')
       }
 
+      setDocumentText(text)
+      setFileName(file.name)
       onDocumentProcessed(text)
-      
-      const result = await generateSummary(text)
+
+      // Call backend
+      const languageCode = languageMap[selectedLanguage] || 'eng'
+      const result = await generateSummary(text, languageCode)
       onSummaryGenerated(result.summary)
-      onKeySectionsFound(result.keySections)
+      onKeySectionsFound(result.keySections || [])
       
     } catch (error) {
       console.error('Error processing document:', error)
@@ -89,11 +106,8 @@ const LawyerDocumentUpload = ({
   const handleDrag = useCallback((e) => {
     e.preventDefault()
     e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
-    } else if (e.type === "dragleave") {
-      setDragActive(false)
-    }
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true)
+    else if (e.type === 'dragleave') setDragActive(false)
   }, [])
 
   const handleDrop = useCallback((e) => {
@@ -101,18 +115,13 @@ const LawyerDocumentUpload = ({
     e.stopPropagation()
     setDragActive(false)
     setError('')
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0])
-    }
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
   }, [])
 
   const handleChange = (e) => {
     e.preventDefault()
     setError('')
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0])
-    }
+    if (e.target.files && e.target.files[0]) handleFile(e.target.files[0])
   }
 
   const handlePasteText = async () => {
@@ -133,10 +142,14 @@ const LawyerDocumentUpload = ({
     setError('')
     
     try {
+      setDocumentText(text)
+      setFileName('Pasted Text')
       onDocumentProcessed(text)
-      const result = await generateSummary(text)
+
+      const languageCode = languageMap[selectedLanguage] || 'eng'
+      const result = await generateSummary(text, languageCode)
       onSummaryGenerated(result.summary)
-      onKeySectionsFound(result.keySections)
+      onKeySectionsFound(result.keySections || [])
     } catch (error) {
       setError(error.message || 'Error generating legal analysis.')
     } finally {
@@ -153,10 +166,14 @@ const LawyerDocumentUpload = ({
     setError('')
     
     try {
+      setDocumentText(sampleText)
+      setFileName(`${type} Sample Document`)
       onDocumentProcessed(sampleText)
-      const result = await generateSummary(sampleText)
+
+      const languageCode = languageMap[selectedLanguage] || 'eng'
+      const result = await generateSummary(sampleText, languageCode)
       onSummaryGenerated(result.summary)
-      onKeySectionsFound(result.keySections)
+      onKeySectionsFound(result.keySections || [])
     } catch (error) {
       setError(error.message || 'Error generating analysis.')
     } finally {
@@ -168,30 +185,32 @@ const LawyerDocumentUpload = ({
     const template = getLegalTemplate(templateType)
     const textarea = document.getElementById('lawyer-text-input')
     textarea.value = template
+    setDocumentText(template)
+    setFileName(`${templateType} Template`)
+    onDocumentProcessed(template)
   }
 
   return (
     <div className="professional-component-card">
-      {/* Professional Header with Audio Controls */}
+      {/* Header */}
       <div className="professional-header">
         <Scale className="professional-icon" />
         <div className="header-content">
           <h2 className="professional-title">Legal Professional Document Analysis</h2>
-          <p className="professional-subtitle">Advanced legal document processing with professional-grade analysis</p>
+          <p className="professional-subtitle">Advanced AI analysis for legal professionals</p>
         </div>
-        
-        {/* Audio and Language Controls */}
+
+        {/* Language Dropdown */}
         <div className="audio-controls">
           <div className="audio-player professional">
             <button 
               className="audio-btn professional"
-              title="Listen to analysis (Feature coming soon)"
+              title="Listen (Coming Soon)"
             >
               <Volume2 size={18} />
             </button>
-            
             <div className="language-dropdown professional">
-              <button 
+              <button
                 className="language-btn professional"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 title="Select language"
@@ -199,7 +218,6 @@ const LawyerDocumentUpload = ({
                 <Languages size={16} />
                 <ChevronDown size={12} />
               </button>
-              
               {isDropdownOpen && (
                 <div className="language-menu professional">
                   <div className="language-menu-content">
@@ -214,9 +232,6 @@ const LawyerDocumentUpload = ({
                         {selectedLanguage === language && <span className="checkmark">✓</span>}
                       </button>
                     ))}
-                    <div className="language-note">
-                      Professional TTS coming soon
-                    </div>
                   </div>
                 </div>
               )}
@@ -225,6 +240,7 @@ const LawyerDocumentUpload = ({
         </div>
       </div>
 
+      {/* Error */}
       {error && (
         <div className="professional-error-state">
           <AlertCircle className="professional-error-icon" />
@@ -232,25 +248,24 @@ const LawyerDocumentUpload = ({
         </div>
       )}
 
+      {/* Upload + Text Input */}
       <div className="professional-space-y-6">
-        {/* Document Type Selector */}
         <div className="document-type-section">
           <label className="document-type-label">Document Type</label>
-          <select 
+          <select
             value={documentType}
             onChange={(e) => setDocumentType(e.target.value)}
             className="document-type-select"
           >
-            <option value="general">General Legal Document</option>
+            <option value="general">General</option>
             <option value="judgment">Court Judgment</option>
-            <option value="contract">Contract/Agreement</option>
-            <option value="statute">Statute/Legislation</option>
-            <option value="pleading">Pleading/Application</option>
+            <option value="contract">Contract / Agreement</option>
+            <option value="statute">Statute / Legislation</option>
+            <option value="pleading">Pleading / Application</option>
             <option value="research">Legal Research</option>
           </select>
         </div>
 
-        {/* Professional Upload Area */}
         <div
           className={`professional-upload-area ${dragActive ? 'drag-active' : ''} ${error ? 'has-error' : ''}`}
           onDragEnter={handleDrag}
@@ -261,7 +276,7 @@ const LawyerDocumentUpload = ({
           <Upload className="professional-upload-icon" />
           <div className="upload-text">
             <p className="upload-main-text">Drop legal document here</p>
-            <p className="upload-subtext">Court judgments, contracts, statutes, pleadings (PDF, DOC, DOCX, TXT) - Up to 25MB</p>
+            <p className="upload-subtext">PDF, DOC, DOCX, or TXT (Max 25MB)</p>
           </div>
           <input
             type="file"
@@ -280,11 +295,8 @@ const LawyerDocumentUpload = ({
           </label>
         </div>
 
-        <div className="professional-divider">
-          <span>or</span>
-        </div>
+        <div className="professional-divider"><span>or</span></div>
 
-        {/* Professional Text Input */}
         <div className="professional-text-input-section">
           <label htmlFor="lawyer-text-input" className="professional-text-input-label">
             Paste Legal Document Content
@@ -292,12 +304,10 @@ const LawyerDocumentUpload = ({
           <textarea
             id="lawyer-text-input"
             className="professional-text-input"
-            placeholder="Paste complete legal document text for professional analysis..."
+            placeholder="Paste complete legal document text here..."
             onChange={() => setError('')}
             rows="8"
           />
-          
-          {/* Professional Buttons */}
           <div className="professional-button-container">
             <button
               onClick={handlePasteText}
@@ -316,87 +326,19 @@ const LawyerDocumentUpload = ({
                 </>
               )}
             </button>
-            
-            <button
-              onClick={handlePasteText}
-              disabled={isLoading}
-              className="professional-action-button professional-advise-button"
-            >
-              <BookOpen size={16} />
-              Generate Advise
-            </button>
           </div>
         </div>
-
-        {/* Professional Templates Section */}
-        <div className="professional-section">
-          <p className="section-title">
-            <BookOpen className="section-icon" />
-            Legal Document Templates
-          </p>
-          <div className="professional-template-grid">
-            <button
-              onClick={() => handleTemplate('bailApplication')}
-              className="professional-template-button bail-template"
-            >
-              <span className="template-strong">Bail Application</span>
-              <span className="template-subtext">Section 439 CrPC format</span>
-            </button>
-            <button
-              onClick={() => handleTemplate('divorcePetition')}
-              className="professional-template-button divorce-template"
-            >
-              <span className="template-strong">Divorce Petition</span>
-              <span className="template-subtext">Hindu Marriage Act, Section 13</span>
-            </button>
-            <button
-              onClick={() => handleTemplate('consumerComplaint')}
-              className="professional-template-button consumer-template"
-            >
-              <span className="template-strong">Consumer Complaint</span>
-              <span className="template-subtext">Consumer Protection Act, 2019</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Professional Sample Documents */}
-        <div className="professional-section">
-          <p className="section-title">
-            <Users className="section-icon" />
-            Sample Legal Documents
-          </p>
-          <div className="professional-sample-grid">
-            <button
-              onClick={() => handleSampleDocument('short')}
-              className="professional-sample-button"
-            >
-              Brief Judgment
-            </button>
-            <button
-              onClick={() => handleSampleDocument('medium')}
-              className="professional-sample-button"
-            >
-              Standard Case
-            </button>
-            <button
-              onClick={() => handleSampleDocument('long')}
-              className="professional-sample-button"
-            >
-              Complex Matter
-            </button>
-          </div>
-        </div>
-
-        {isLoading && (
-          <div className="professional-loading-state">
-            <Loader className="professional-loading-spinner" />
-            <div>
-              <p className="professional-loading-text">Processing Legal Document</p>
-              <p className="professional-loading-subtext">Performing comprehensive legal analysis...</p>
-            </div>
-          </div>
-        )}
       </div>
+
+      {isLoading && (
+        <div className="professional-loading-state">
+          <Loader className="professional-loading-spinner" />
+          <div>
+            <p className="professional-loading-text">Processing Legal Document</p>
+            <p className="professional-loading-subtext">Performing comprehensive analysis...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

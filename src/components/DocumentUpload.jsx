@@ -1,6 +1,6 @@
 // src/components/DocumentUpload.jsx
 import React, { useCallback, useState } from 'react'
-import { Upload, FileText, Loader, AlertCircle, Scale, Volume2, Languages, ChevronDown } from 'lucide-react'
+import { Upload, FileText, Loader, AlertCircle, Scale, Volume2, Languages, ChevronDown, CheckCircle } from 'lucide-react'
 import { generateSummary } from '../services/summarization'
 import { parsePDF, parseDOCX, loadSampleDocument } from '../utils/fileParser'
 import { getLegalTemplate } from '../utils/legalTemplates'
@@ -17,6 +17,9 @@ const DocumentUpload = ({
   const [error, setError] = useState('')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState('English (US)')
+  const [documentText, setDocumentText] = useState('')
+  const [fileName, setFileName] = useState('') // Track file name
+  const [textLoaded, setTextLoaded] = useState(false) // Track if text is loaded
 
   const languages = [
     'English (US)',
@@ -26,6 +29,16 @@ const DocumentUpload = ({
     'Telugu',
     'Malayalam'
   ]
+
+  // Language mapping for API
+  const languageMap = {
+    'English (US)': 'eng',
+    'English (India)': 'eng',
+    'Hindi': 'hin',
+    'Tamil': 'tam', 
+    'Telugu': 'tel',
+    'Malayalam': 'mal'
+  };
 
   const handleLanguageSelect = (language) => {
     setSelectedLanguage(language)
@@ -71,12 +84,12 @@ const DocumentUpload = ({
         throw new Error('Document appears to be empty or too short for summarization.')
       }
 
-      onDocumentProcessed(text)
-
-      // Generate summary and key sections
-      const result = await generateSummary(text)
-      onSummaryGenerated(result.summary)
-      onKeySectionsFound(result.keySections)
+      // Store the text locally but DON'T call backend yet
+      setDocumentText(text)
+      setFileName(file.name)
+      setTextLoaded(true)
+      onDocumentProcessed(text) // Pass to parent for display
+      setError('') // Clear errors
 
     } catch (error) {
       console.error('Error processing document:', error)
@@ -85,6 +98,68 @@ const DocumentUpload = ({
       setIsLoading(false)
     }
   }
+
+  const handlePasteText = () => {
+    const textarea = document.getElementById('text-input')
+    const text = textarea.value.trim()
+
+    if (!text) {
+      setError('Please paste some text content first.')
+      return
+    }
+
+    if (text.length < 50) {
+      setError('Text appears too short for meaningful summarization.')
+      return
+    }
+
+    // Store the text locally but DON'T call backend yet
+    setDocumentText(text)
+    setFileName('Pasted Text')
+    setTextLoaded(true)
+    onDocumentProcessed(text) // Pass to parent for display
+    setError('') // Clear any previous errors
+  }
+
+  const handleSampleDocument = (type) => {
+    const sampleText = loadSampleDocument(type)
+    const textarea = document.getElementById('text-input')
+    textarea.value = sampleText
+
+    // Store the sample text locally but DON'T call backend yet
+    setDocumentText(sampleText)
+    setFileName(`${type} Sample Document`)
+    setTextLoaded(true)
+    onDocumentProcessed(sampleText) // Pass to parent for display
+    setError('') // Clear any previous errors
+  }
+
+  // THIS IS THE MAIN FUNCTION THAT CALLS THE BACKEND
+  // Inside DocumentUpload.jsx
+
+const handleGenerateSummary = async () => {
+  if (!documentText) {
+    setError('Please upload a document, paste text, or select a sample first.');
+    return;
+  }
+
+  setIsLoading(true);
+  setError('');
+
+  try {
+    const languageCode = languageMap[selectedLanguage] || 'eng';
+    const result = await generateSummary(documentText, languageCode);
+
+    onSummaryGenerated(result.summary);
+    onKeySectionsFound(result.keySections || []);
+  } catch (error) {
+    console.error('Error generating summary:', error);
+    setError(error.message || 'Failed to connect to backend. Ensure FastAPI is running on port 8000.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleDrag = useCallback((e) => {
     e.preventDefault()
@@ -115,60 +190,38 @@ const DocumentUpload = ({
     }
   }
 
-  const handlePasteText = async () => {
-    const textarea = document.getElementById('text-input')
-    const text = textarea.value.trim()
-
-    if (!text) {
-      setError('Please paste some text content first.')
-      return
-    }
-
-    if (text.length < 50) {
-      setError('Text appears too short for meaningful summarization.')
-      return
-    }
-
-    setIsLoading(true)
-    setError('')
-
-    try {
-      onDocumentProcessed(text)
-      const result = await generateSummary(text)
-      onSummaryGenerated(result.summary)
-      onKeySectionsFound(result.keySections)
-    } catch (error) {
-      setError(error.message || 'Error generating summary.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSampleDocument = async (type) => {
-    const sampleText = loadSampleDocument(type)
-    const textarea = document.getElementById('text-input')
-    textarea.value = sampleText
-
-    // Auto-generate summary for sample documents
-    setIsLoading(true)
-    setError('')
-
-    try {
-      onDocumentProcessed(sampleText)
-      const result = await generateSummary(sampleText)
-      onSummaryGenerated(result.summary)
-      onKeySectionsFound(result.keySections)
-    } catch (error) {
-      setError(error.message || 'Error generating summary.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleTemplate = (templateType) => {
     const template = getLegalTemplate(templateType)
     const textarea = document.getElementById('text-input')
     textarea.value = template
+    
+    // Store template text locally but DON'T call backend yet
+    setDocumentText(template)
+    setFileName(`${templateType} Template`)
+    setTextLoaded(true)
+    onDocumentProcessed(template) // Pass to parent for display
+    setError('') // Clear any previous errors
+  }
+
+  const clearDocument = () => {
+    setDocumentText('')
+    setFileName('')
+    setTextLoaded(false)
+    onDocumentProcessed('')
+    onSummaryGenerated('')
+    onKeySectionsFound([])
+    
+    // Clear textarea
+    const textarea = document.getElementById('text-input')
+    if (textarea) {
+      textarea.value = ''
+    }
+    
+    // Clear file input
+    const fileInput = document.getElementById('file-upload')
+    if (fileInput) {
+      fileInput.value = ''
+    }
   }
 
   return (
@@ -237,6 +290,24 @@ const DocumentUpload = ({
         </div>
       )}
 
+      {/* Document Loaded Status */}
+      {textLoaded && documentText && (
+        <div className="document-status">
+          <div className="status-success">
+            <CheckCircle className="status-icon" />
+            <div className="status-content">
+              <p className="status-title">Document Ready for Analysis</p>
+              <p className="status-subtitle">
+                {fileName} loaded ({documentText.split(/\s+/).length} words)
+                <button onClick={clearDocument} className="clear-btn">
+                  Clear
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="upload-content">
         {/* Drag and drop area */}
         <div
@@ -249,7 +320,7 @@ const DocumentUpload = ({
           <Upload className="upload-icon" />
           <div className="upload-text">
             <p className="upload-main-text">Drop your legal document here</p>
-            <p className="upload-subtext">Indian court judgments, legal acts (PDF, DOCX, TXT)</p>
+            <p className="upload-subtext">Indian court judgments, legal acts (PDF, DOCX)</p>
           </div>
           <input
             type="file"
@@ -288,14 +359,14 @@ const DocumentUpload = ({
           {/* Buttons */}
           <div className="button-container">
             <button
-              onClick={handlePasteText}
-              disabled={isLoading}
+              onClick={handleGenerateSummary}
+              disabled={isLoading || !textLoaded}
               className="action-button summary-button"
             >
               {isLoading ? (
                 <>
                   <Loader className="loading-spinner" />
-                  Generating Summary...
+                  Calling Backend API...
                 </>
               ) : (
                 <>
@@ -308,10 +379,10 @@ const DocumentUpload = ({
             <button
               onClick={handlePasteText}
               disabled={isLoading}
-              className="action-button advise-button"
+              className="action-button load-button"
             >
-              <Scale className="button-icon" />
-              Generate Advise
+              <CheckCircle className="button-icon" />
+              Load Text
             </button>
           </div>
         </div>
@@ -322,18 +393,21 @@ const DocumentUpload = ({
           <div className="sample-buttons-grid">
             <button
               onClick={() => handleSampleDocument('short')}
+              disabled={isLoading}
               className="sample-button"
             >
               Short Sample
             </button>
             <button
               onClick={() => handleSampleDocument('medium')}
+              disabled={isLoading}
               className="sample-button"
             >
               Medium Sample
             </button>
             <button
               onClick={() => handleSampleDocument('long')}
+              disabled={isLoading}
               className="sample-button"
             >
               Long Sample
@@ -347,18 +421,21 @@ const DocumentUpload = ({
           <div className="template-buttons-grid">
             <button
               onClick={() => handleTemplate('bailApplication')}
+              disabled={isLoading}
               className="template-button bail-template"
             >
               📝 Bail Application Template
             </button>
             <button
               onClick={() => handleTemplate('divorcePetition')}
+              disabled={isLoading}
               className="template-button divorce-template"
             >
               💔 Divorce Petition Template
             </button>
             <button
               onClick={() => handleTemplate('consumerComplaint')}
+              disabled={isLoading}
               className="template-button consumer-template"
             >
               ⚖️ Consumer Complaint Template
@@ -370,8 +447,8 @@ const DocumentUpload = ({
           <div className="loading-state">
             <Loader className="loading-spinner" />
             <div>
-              <p className="loading-text">Processing Document</p>
-              <p className="loading-subtext">Analyzing legal content and generating summary...</p>
+              <p className="loading-text">Calling Backend API</p>
+              <p className="loading-subtext">Sending document to FastAPI backend for summarization...</p>
             </div>
           </div>
         )}
