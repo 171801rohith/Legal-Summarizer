@@ -1,17 +1,21 @@
-# React + Vite
+# Pravaah frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite client for the [Pravaah backend](https://github.com/kritharth2005/Pravah). It has two portals: Citizen (plain-language summaries and advice) and Legal Professional (technical analysis).
 
-Currently, two official plugins are available:
+```sh
+npm install
+npm run dev      # http://localhost:3000
+npm run build
+npm run lint
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The backend is expected at `http://127.0.0.1:8000`. To point elsewhere, copy `.env.example` to `.env.local` and set `VITE_API_BASE_URL`.
 
-## React Compiler
+| Path | Purpose |
+|------|---------|
+| `src/services/api.js` | The only module that talks to the backend |
+| `src/components/DocumentUpload.jsx` | Upload/paste form, shared by both portals |
+| `src/components/SummaryView.jsx`, `lawyer/LawyerSummaryView.jsx` | Result views (Markdown, audio, notices, metrics) |
+| `src/components/SummaryActions.jsx` | Copy and print, shared by both views |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# Legal-Summarizer
+Uploads accept PDF, PNG, JPG (sent to the backend for extraction/OCR) and TXT (read in the browser), up to 10 MB.

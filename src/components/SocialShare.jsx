@@ -2,9 +2,9 @@
 import React from 'react'
 import { Twitter, Linkedin, Link2, Facebook } from 'lucide-react'
 
-const SocialShare = ({ summary, title = "Legal Document Summary" }) => {
+const SocialShare = () => {
   const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
-  const shareText = `Check out this legal document summary: ${title}`
+  const shareText = 'Pravaah: AI summaries and guidance for Indian legal documents'
 
   const shareLinks = {
     twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
@@ -23,7 +23,7 @@ const SocialShare = ({ summary, title = "Legal Document Summary" }) => {
 
   return (
     <div className="social-share mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Share summary:</p>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Share Pravaah:</p>
       <div className="flex gap-2">
         <a
           href={shareLinks.twitter}

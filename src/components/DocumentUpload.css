@@ -7,6 +7,104 @@
   border: 1px solid #e5e7eb;
 }
 
+/* Animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Audio Controls in Upload Section */
+
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Lawyer Document Upload Component Styles
+.professional-component-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #3b82f6;
+}
+
+.dark .professional-component-card {
+  background: #1f2937;
+  border-color: #374151;
+  border-left-color: #3b82f6;
+  color: #f9fafb;
+}
+
+/* Professional Header */
+
+.professional-subtitle {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0 0;
+  line-height: 1.4;
+}
+
+.dark .professional-subtitle {
+  color: #9ca3af;
+}
+
+/* Professional Upload Area */
+
+.upload-main-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.dark .upload-main-text {
+  color: #f1f5f9;
+}
+
+.upload-subtext {
+  color: #64748b;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.dark .upload-subtext {
+  color: #94a3b8;
+}
+
+/* Animations */
+@keyframes professional-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Utility Classes */
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.rounded-lg {
+  border-radius: 8px;
+}
+
 .dark .component-card {
   background: #1f2937;
   border-color: #374151;
@@ -216,145 +314,7 @@
   background: #2563eb;
 }
 
-/* Advise Button */
-.advise-button {
-  background: #10b981;
-  color: white;
-}
-
-.advise-button:hover:not(:disabled) {
-  background: #059669;
-}
-
-/* Section Headers */
-.section-header {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6b7280;
-  margin-bottom: 1rem;
-}
-
-.dark .section-header {
-  color: #9ca3af;
-}
-
-/* Sample Buttons */
-.sample-buttons-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-}
-
-@media (min-width: 640px) {
-  .sample-buttons-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.sample-button {
-  padding: 0.75rem 1rem;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
-.sample-button:hover {
-  background: #e5e7eb;
-  transform: translateY(-1px);
-}
-
-.dark .sample-button {
-  background: #374151;
-  border-color: #4b5563;
-  color: #d1d5db;
-}
-
-.dark .sample-button:hover {
-  background: #4b5563;
-}
-
-/* Template Buttons */
-.template-buttons-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-}
-
-.template-button {
-  padding: 0.75rem 1rem;
-  border: 1px solid;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  text-align: left;
-}
-
-.template-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Bail Application Template */
-.bail-template {
-  background: #faf5ff;
-  border-color: #e9d5ff;
-  color: #7c3aed;
-}
-
-.dark .bail-template {
-  background: #4c1d95;
-  border-color: #7c3aed;
-  color: #e9d5ff;
-}
-
-/* Divorce Petition Template */
-.divorce-template {
-  background: #fdf2f8;
-  border-color: #fbcfe8;
-  color: #db2777;
-}
-
-.dark .divorce-template {
-  background: #831843;
-  border-color: #db2777;
-  color: #fbcfe8;
-}
-
-/* Consumer Complaint Template */
-.consumer-template {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #16a34a;
-}
-
-.dark .consumer-template {
-  background: #14532d;
-  border-color: #16a34a;
-  color: #bbf7d0;
-}
-
 /* Loading State */
-.loading-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: #eff6ff;
-  border-radius: 8px;
-  margin-top: 1rem;
-}
-
-.dark .loading-state {
-  background: #1e3a8a;
-}
 
 .loading-spinner {
   animation: spin 1s linear infinite;
@@ -363,25 +323,6 @@
 
 .dark .loading-spinner {
   color: #60a5fa;
-}
-
-.loading-text {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #1e40af;
-}
-
-.dark .loading-text {
-  color: #dbeafe;
-}
-
-.loading-subtext {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.dark .loading-subtext {
-  color: #9ca3af;
 }
 
 /* Divider */
@@ -396,16 +337,6 @@
   color: #9ca3af;
 }
 
-/* Section Borders */
-.section-border {
-  border-top: 1px solid #e5e7eb;
-  padding-top: 1.5rem;
-}
-
-.dark .section-border {
-  border-top-color: #374151;
-}
-
 /* Animations */
 @keyframes spin {
   from {
@@ -415,14 +346,6 @@
     transform: rotate(360deg);
   }
 }
-
-/* Focus States */
-/* .focus-ring:focus {
-  outline: none;
-  ring: 2px;
-  ring-color: #3b82f6;
-  ring-offset: 2px;
-} */
 
 /* Responsive Design */
 @media (max-width: 640px) {
@@ -461,49 +384,14 @@
   margin-top: 1.5rem;
 }
 
-.flex-items-center {
-  display: flex;
-  align-items: center;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.w-full {
-  width: 100%;
-}
-
-.hidden {
-  display: none;
-}
-
 .transition-colors {
   transition-property: color, background-color, border-color;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
 
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
-}
-
-.duration-200 {
-  transition-duration: 200ms;
-}
-
-.shadow-sm {
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
 .rounded-lg {
   border-radius: 12px;
-}
-
-.rounded-xl {
-  border-radius: 16px;
 }
 /* Audio Controls in Upload Section */
 .upload-header {
@@ -558,21 +446,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.audio-btn {
-  padding: 0.5rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.audio-btn:hover {
-  background: #2563eb;
-  transform: scale(1.05);
 }
 
 .language-dropdown {
@@ -673,20 +546,6 @@
   font-weight: bold;
 }
 
-.language-note {
-  font-size: 0.625rem;
-  color: #6b7280;
-  text-align: center;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.dark .language-note {
-  color: #9ca3af;
-  border-top-color: #4b5563;
-}
-
 @keyframes dropdownFade {
   from {
     opacity: 0;
@@ -701,15 +560,6 @@
 /* Professional audio controls */
 .audio-player.professional {
   gap: 0.375rem;
-}
-
-.audio-btn.professional {
-  background: #1e40af;
-  padding: 0.375rem;
-}
-
-.audio-btn.professional:hover {
-  background: #1e3a8a;
 }
 
 .language-btn.professional {
